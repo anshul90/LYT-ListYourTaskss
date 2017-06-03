@@ -1,12 +1,16 @@
 package com.example.demoapplication.ClassFiles;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
 import android.text.TextPaint;
@@ -30,14 +34,47 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
     private final int CAMERA_PHOTO_REQUEST_CODE = 1;
     String sEnterUserLogin, sEnterPassword;
     CameraController cameraController;
     Typeface normaltypeFace;
+    String[] permissions = new String[]{
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
     private EditText etEmail, ePwd;
     private TextView btLogin, signUpTv;
+
+    private boolean checkPermissions() {
+        int result;
+        List<String> listPermissionsNeeded = new ArrayList<>();
+        for (String p : permissions) {
+            result = ContextCompat.checkSelfPermission(this, p);
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(p);
+            }
+        }
+        if (!listPermissionsNeeded.isEmpty()) {
+            ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]), 100);
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        if (requestCode == 100) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // do something
+            }
+            return;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +90,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         ePwd.setTypeface(normaltypeFace);
         signUpTv.setTypeface(normaltypeFace, Typeface.BOLD);
         btLogin.setTypeface(normaltypeFace, Typeface.BOLD);
-
+        //Permission
+        checkPermissions();
         //Sign Up
         signUpTv.setMovementMethod(LinkMovementMethod.getInstance());
         signUpTv.setHighlightColor(Color.TRANSPARENT);

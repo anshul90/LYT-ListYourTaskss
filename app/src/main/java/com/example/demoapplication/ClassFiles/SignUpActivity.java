@@ -16,6 +16,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -44,6 +46,7 @@ import java.util.regex.Pattern;
 
 
 public class SignUpActivity extends AppCompatActivity implements View.OnClickListener {
+    public static final int MY_PERMISSIONS_REQUEST_CAMERA = 100;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 29;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 28;
     final int REQUEST_IMAGE_CAPTURE = 1;
@@ -85,9 +88,73 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                     // initializeView();
                 } else {
                     Log.d("Home", "Permission Failed");
-                    Toast.makeText(this, "You must allow permission  to your mobile device.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "You must allow permission to your mobile device.", Toast.LENGTH_SHORT).show();
                     // finish();
                 }
+            }
+            break;
+            case MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE: {
+                Log.i("Camera", "G : " + grantResults[0]);
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    final String dir = Environment
+                            .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                            + "/picFolder/";
+                    File newdir = new File(dir);
+                    if (!newdir.exists()) {
+                        newdir.mkdir();
+                    }
+                    File[] files = newdir.listFiles();
+
+                    int count = 0;
+                    if (files == null) {
+                        count = 0;
+                    } else {
+                        count = files.length;
+                    }
+                    count++;
+                    String file_str = dir + count + ".jpg";
+                    File newfile = new File(file_str);
+                    try {
+                        newfile.createNewFile();
+                    } catch (IOException e) {
+                    }
+
+                    Uri fileUri = Uri.fromFile(newfile);
+
+                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                        imagePath = fileUri.getPath();
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+                        intent.putExtra("android.intent.extras.CAMERA_FACING", android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
+                        intent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+                        intent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+
+                    } else {
+                        imagePath = fileUri.getPath();
+                        File file = new File(fileUri.getPath());
+                        Uri photoUri = FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".provider", file);
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                    }
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    if (intent.resolveActivity(getApplicationContext().getPackageManager()) != null) {
+                        startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+                    }
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+
+                    if (ActivityCompat.shouldShowRequestPermissionRationale
+                            (this, Manifest.permission.CAMERA)) {
+                        Toast.makeText(this, "You must allow permission to your mobile device.", Toast.LENGTH_SHORT).show();
+                    } else {
+
+                    }
+                }
+                break;
             }
             // Add additional cases for other permissions you may have asked for
         }
@@ -174,12 +241,13 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                 }
                 // uploadImage();
             }
+        } else {
+            imagePath = "";
         }
     }
 
     public String getRealPathFromDocumentUri(Uri uri) {
         String filePath = "";
-
         Pattern p = Pattern.compile("(\\d+)$");
         Matcher m = p.matcher(uri.toString());
         if (!m.find()) {
@@ -432,44 +500,106 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                             new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog,
                                                     int id) {
-                                    final String dir = Environment
-                                            .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                                            + "/picFolder/";
-                                    File newdir = new File(dir);
-                                    if (!newdir.exists()) {
-                                        newdir.mkdir();
-                                    }
-                                    File[] files = newdir.listFiles();
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                                            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO},
+                                                    MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+                                        } else {
 
-                                    int count = 0;
-                                    if (files == null) {
-                                        count = 0;
+                                            final String dir = Environment
+                                                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                                                    + "/picFolder/";
+                                            File newdir = new File(dir);
+                                            if (!newdir.exists()) {
+                                                newdir.mkdir();
+                                            }
+                                            File[] files = newdir.listFiles();
+
+                                            int count = 0;
+                                            if (files == null) {
+                                                count = 0;
+                                            } else {
+                                                count = files.length;
+                                            }
+                                            count++;
+                                            String file_str = dir + count + ".jpg";
+                                            File newfile = new File(file_str);
+                                            try {
+                                                newfile.createNewFile();
+                                            } catch (IOException e) {
+                                            }
+
+                                            Uri fileUri = Uri.fromFile(newfile);
+
+                                            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                                                imagePath = fileUri.getPath();
+                                                intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+                                                intent.putExtra("android.intent.extras.CAMERA_FACING", android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
+                                                intent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+                                                intent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+                                            } else {
+                                                imagePath = fileUri.getPath();
+                                                File file = new File(fileUri.getPath());
+                                                Uri photoUri = FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".provider", file);
+                                                intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                                                intent.putExtra("android.intent.extras.CAMERA_FACING", android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
+                                                intent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+                                                intent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+                                            }
+                                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                            if (intent.resolveActivity(getApplicationContext().getPackageManager()) != null) {
+                                                startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+                                            }
+                                        }
                                     } else {
-                                        count = files.length;
+
+                                        final String dir = Environment
+                                                .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                                                + "/picFolder/";
+                                        File newdir = new File(dir);
+                                        if (!newdir.exists()) {
+                                            newdir.mkdir();
+                                        }
+                                        File[] files = newdir.listFiles();
+
+                                        int count = 0;
+                                        if (files == null) {
+                                            count = 0;
+                                        } else {
+                                            count = files.length;
+                                        }
+                                        count++;
+                                        String file_str = dir + count + ".jpg";
+                                        File newfile = new File(file_str);
+                                        try {
+                                            newfile.createNewFile();
+                                        } catch (IOException e) {
+                                        }
+
+                                        Uri fileUri = Uri.fromFile(newfile);
+
+                                        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                                            imagePath = fileUri.getPath();
+                                            intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+                                            intent.putExtra("android.intent.extras.CAMERA_FACING", android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
+                                            intent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+                                            intent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+                                        } else {
+                                            imagePath = fileUri.getPath();
+                                            File file = new File(fileUri.getPath());
+                                            Uri photoUri = FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".provider", file);
+                                            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                                            intent.putExtra("android.intent.extras.CAMERA_FACING", android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
+                                            intent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+                                            intent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+                                        }
+                                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                        if (intent.resolveActivity(getApplicationContext().getPackageManager()) != null) {
+                                            startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+                                        }
                                     }
-                                    count++;
-                                    String file = dir + count + ".jpg";
-                                    File newfile = new File(file);
-                                    try {
-                                        newfile.createNewFile();
-                                    } catch (IOException e) {
-                                    }
-
-                                    Uri fileUri = Uri.fromFile(newfile);
-
-                                    imagePath = fileUri.getPath();
-                                    // Log.e("m re", fileUri.getPath());
-                                    Intent takePictureIntent = new Intent(
-                                            MediaStore.ACTION_IMAGE_CAPTURE);
-                                    if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                                        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
-                                        takePictureIntent.putExtra("android.intent.extras.CAMERA_FACING", android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
-                                        takePictureIntent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
-                                        takePictureIntent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
-
-                                        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-                                    }
-
                                 }
                             })
                     .setNegativeButton(R.string.choose_from_gallery,
@@ -517,49 +647,106 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                             new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog,
                                                     int id) {
-                                    final String dir = Environment
-                                            .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                                            + "/picFolder/";
-                                    File newdir = new File(dir);
-                                    if (!newdir.exists()) {
-                                        newdir.mkdir();
-                                    }
-                                    File[] files = newdir.listFiles();
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                                            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO},
+                                                    MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+                                        } else {
 
-                                    int count = 0;
-                                    if (files == null) {
-                                        count = 0;
+                                            final String dir = Environment
+                                                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                                                    + "/picFolder/";
+                                            File newdir = new File(dir);
+                                            if (!newdir.exists()) {
+                                                newdir.mkdir();
+                                            }
+                                            File[] files = newdir.listFiles();
+
+                                            int count = 0;
+                                            if (files == null) {
+                                                count = 0;
+                                            } else {
+                                                count = files.length;
+                                            }
+                                            count++;
+                                            String file_str = dir + count + ".jpg";
+                                            File newfile = new File(file_str);
+                                            try {
+                                                newfile.createNewFile();
+                                            } catch (IOException e) {
+                                            }
+
+                                            Uri fileUri = Uri.fromFile(newfile);
+
+                                            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                                                imagePath = fileUri.getPath();
+                                                intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+                                                intent.putExtra("android.intent.extras.CAMERA_FACING", android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
+                                                intent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+                                                intent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+                                            } else {
+                                                imagePath = fileUri.getPath();
+                                                File file = new File(fileUri.getPath());
+                                                Uri photoUri = FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".provider", file);
+                                                intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                                                intent.putExtra("android.intent.extras.CAMERA_FACING", android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
+                                                intent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+                                                intent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+                                            }
+                                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                            if (intent.resolveActivity(getApplicationContext().getPackageManager()) != null) {
+                                                startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+                                            }
+                                        }
                                     } else {
-                                        count = files.length;
+
+                                        final String dir = Environment
+                                                .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                                                + "/picFolder/";
+                                        File newdir = new File(dir);
+                                        if (!newdir.exists()) {
+                                            newdir.mkdir();
+                                        }
+                                        File[] files = newdir.listFiles();
+
+                                        int count = 0;
+                                        if (files == null) {
+                                            count = 0;
+                                        } else {
+                                            count = files.length;
+                                        }
+                                        count++;
+                                        String file_str = dir + count + ".jpg";
+                                        File newfile = new File(file_str);
+                                        try {
+                                            newfile.createNewFile();
+                                        } catch (IOException e) {
+                                        }
+
+                                        Uri fileUri = Uri.fromFile(newfile);
+
+                                        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                                            imagePath = fileUri.getPath();
+                                            intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+                                            intent.putExtra("android.intent.extras.CAMERA_FACING", android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
+                                            intent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+                                            intent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+                                        } else {
+                                            imagePath = fileUri.getPath();
+                                            File file = new File(fileUri.getPath());
+                                            Uri photoUri = FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".provider", file);
+                                            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                                            intent.putExtra("android.intent.extras.CAMERA_FACING", android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
+                                            intent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+                                            intent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+                                        }
+                                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                        if (intent.resolveActivity(getApplicationContext().getPackageManager()) != null) {
+                                            startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+                                        }
                                     }
-                                    count++;
-                                    String file = dir + count + ".jpg";
-                                    File newfile = new File(file);
-                                    try {
-                                        newfile.createNewFile();
-                                    } catch (IOException e) {
-                                    }
-
-                                    Uri fileUri = Uri.fromFile(newfile);
-
-                                    imagePath = fileUri.getPath();
-                                    // Log.e("m re", fileUri.getPath());
-                                    Intent takePictureIntent = new Intent(
-                                            MediaStore.ACTION_IMAGE_CAPTURE);
-                                    if (takePictureIntent
-                                            .resolveActivity(getPackageManager()) != null) {
-                                        takePictureIntent.putExtra(
-                                                MediaStore.EXTRA_OUTPUT,
-                                                fileUri);
-                                        takePictureIntent.putExtra("android.intent.extras.CAMERA_FACING", android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
-                                        takePictureIntent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
-                                        takePictureIntent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
-
-                                        startActivityForResult(
-                                                takePictureIntent,
-                                                REQUEST_IMAGE_CAPTURE);
-                                    }
-
                                 }
                             })
                     .setNegativeButton(R.string.choose_from_gallery,
