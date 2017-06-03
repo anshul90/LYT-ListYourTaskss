@@ -137,6 +137,9 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                         File file = new File(fileUri.getPath());
                         Uri photoUri = FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".provider", file);
                         intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                        intent.putExtra("android.intent.extras.CAMERA_FACING", android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
+                        intent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+                        intent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
                     }
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     if (intent.resolveActivity(getApplicationContext().getPackageManager()) != null) {
