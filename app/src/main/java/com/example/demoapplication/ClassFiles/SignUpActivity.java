@@ -325,6 +325,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
+        //Change listeners
         firstNameETv.addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {
             }
@@ -622,7 +623,6 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                                             //initializeView();
                                         }
                                     } else {
-                                        // initializeView();
                                         Intent intent = new Intent();
                                         intent.setType("image/*");
                                         intent.setAction(Intent.ACTION_GET_CONTENT);
