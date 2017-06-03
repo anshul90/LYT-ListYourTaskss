@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nMyTask"
+            android:checked="false"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="@string/MyTask" />
+        <item
+            android:id="@+id/nAboutUs"
+            android:checked="false"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="@string/About" />
+
+        <item
+            android:id="@+id/nContactUs"
+            android:checked="false"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="@string/Contact" />
+        <item
+            android:id="@+id/logOut"
+            android:checked="false"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="@string/logout" />
+    </group>
+
+</menu>
