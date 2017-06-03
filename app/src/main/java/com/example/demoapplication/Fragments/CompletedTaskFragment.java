@@ -158,11 +158,6 @@ public class CompletedTaskFragment extends Fragment {
                     }
                 } else {
                     //  removeView();
-                    //Toast.makeText(getActivity(), "Completed", Toast.LENGTH_LONG).show();
-                    // edit_position = position;
-                    //alertDialog.setTitle("Edit Country");
-                    //   et_country.setText(countries.get(position).toString());
-                    //alertDialog.show();
                 }
             }
 
@@ -177,13 +172,6 @@ public class CompletedTaskFragment extends Fragment {
                     float width = height / 3;
 
                     if (dX > 0) {
-                        /*p.setColor(getActivity().getResources().getColor(R.color.App_Green));
-                        RectF background = new RectF((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom());
-                        c.drawRect(background, p);
-                        icon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-                        RectF icon_dest = new RectF((float) itemView.getLeft() + width, (float) itemView.getTop() + width, (float) itemView.getLeft() + 2 * width, (float) itemView.getBottom() - width);
-                        c.drawBitmap(icon, null, icon_dest, p);
-*/
                     } else {
                         p.setColor(getActivity().getResources().getColor(R.color.Red));
                         RectF background = new RectF((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom());
